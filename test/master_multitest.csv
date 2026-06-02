@@ -1,0 +1,14 @@
+﻿name,email,email_status,job_title,affiliation,paper_url,source_files
+Alice Martin,alice.martin@curie.fr,Identifié,Oncologist,"Institut Curie, Paris / Breast Cancer Research Center",https://pubmed.ncbi.nlm.nih.gov/99000001/,"Intervenants_MEET2WIN_test, Intervenants_OTHEREVENT_test, PMC_TME_test, google-results-test"
+Bob Dupont,bob.dupont@inserm.fr,Identifié,,INSERM U900,https://pubmed.ncbi.nlm.nih.gov/99000002/,"Intervenants_MEET2WIN_test, PMC_TME_test"
+Carol Leroy,carol.leroy@unicancer.fr,Suggéré (Format standard),,Unicancer / Centre Léon Bérard,https://pubmed.ncbi.nlm.nih.gov/99000003/,"Intervenants_MEET2WIN_test, PMC_TME_test"
+David Prince,david.prince@gustaveroussy.fr,Identifié,Clinical Research Director,Gustave Roussy,,"Intervenants_MEET2WIN_test, google-results-test"
+Eve Simon,eve.simon@pfizer.com,Identifié,,Pfizer Oncology,,Intervenants_MEET2WIN_test
+Frank Morel,frank.morel@roche.com,Suggéré (Format standard),,Roche France,,Intervenants_MEET2WIN_test
+Grace Laurent,,Non trouvé,,,,Intervenants_MEET2WIN_test
+Léa Dupré,lea.dupre@igf.cnrs.fr,Identifié,Translational Researcher,"IGF, Montpellier",,"Intervenants_MEET2WIN_test, google-results-test"
+Henri Blanc,henri.blanc@aphp.fr,Identifié,,AP-HP,,Intervenants_OTHEREVENT_test
+Isabelle Noir,isabelle.noir@inserm.fr,Suggéré (Format standard),,INSERM,,Intervenants_OTHEREVENT_test
+Henri Blanc,henri.blanc@igr.fr,Identifié,,Institut Gustave Roussy,https://pubmed.ncbi.nlm.nih.gov/99000004/,PMC_TME_test
+Isabelle Cote,,,Director - Global Oncology,,,google-results-test
+Nina Fox,,,Biostatistician,,,google-results-test

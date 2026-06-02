@@ -1,0 +1,15 @@
+{
+  "name": "sst-csv-merger",
+  "version": "1.0.0",
+  "description": "Merge multiple CSV files into a single master CSV",
+  "main": "merge.js",
+  "scripts": {
+    "merge": "node merge.js"
+  },
+  "dependencies": {
+    "csv-parse": "^5.6.0",
+    "csv-stringify": "^6.5.0",
+    "express": "^5.2.1",
+    "multer": "^2.1.1"
+  }
+}

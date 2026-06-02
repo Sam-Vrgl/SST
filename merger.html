@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>CSV Merger</title>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5/papaparse.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f0f2f5;
+      min-height: 100vh;
+      margin: 0;
+      padding: 32px 16px 64px;
+      color: #1a1a2e;
+    }
+
+    .page-wrap {
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    /* ── Header ── */
+    .header { margin-bottom: 28px; }
+    .header h1 { font-size: 1.6rem; margin: 0 0 4px; font-weight: 700; }
+    .header p  { margin: 0; color: #666; font-size: 0.88rem; }
+
+    /* ── Card ── */
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.08);
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+    .card-title {
+      font-size: 0.78rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: #888;
+      margin: 0 0 14px;
+    }
+
+    /* ── Drop zone ── */
+    .drop-zone {
+      border: 2px dashed #c5cae9;
+      border-radius: 10px;
+      padding: 28px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color .2s, background .2s;
+      background: #fafbff;
+      position: relative;
+    }
+    .drop-zone:hover, .drop-zone.drag-over {
+      border-color: #5c6bc0;
+      background: #f0f1ff;
+    }
+    .drop-zone input[type="file"] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+    .drop-icon { font-size: 2rem; margin-bottom: 8px; }
+    .drop-label { font-weight: 600; color: #3949ab; font-size: 0.95rem; }
+    .drop-hint  { font-size: 0.78rem; color: #999; margin-top: 4px; }
+    .file-list  { margin-top: 12px; text-align: left; font-size: 0.82rem; }
+    .file-chip {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: #e8eaf6; color: #3949ab; border-radius: 20px;
+      padding: 3px 10px; margin: 3px 3px 0 0; font-size: 0.78rem;
+    }
+    .file-chip.unmatched { background: #fce4ec; color: #c62828; }
+
+    /* ── Button ── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 11px 28px; font-size: 0.95rem; font-weight: 600;
+      background: #3949ab; color: #fff; border: none; border-radius: 8px;
+      cursor: pointer; transition: background .2s, opacity .2s;
+      margin-top: 18px;
+    }
+    .btn:hover  { background: #303f9f; }
+    .btn:disabled { opacity: .55; cursor: not-allowed; }
+    .spinner {
+      width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.4);
+      border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite;
+      display: none;
+    }
+    .btn.loading .spinner { display: block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Status banner ── */
+    .status-banner {
+      display: none; border-radius: 8px; padding: 12px 16px;
+      font-size: 0.88rem; font-weight: 500; margin-top: 16px;
+    }
+    .status-banner.ok    { background: #e8f5e9; color: #1b5e20; border: 1px solid #a5d6a7; }
+    .status-banner.error { background: #ffebee; color: #b71c1c; border: 1px solid #ef9a9a; }
+    .status-banner.warn  { background: #fff8e1; color: #7a4f00; border: 1px solid #ffe082; }
+
+    /* ── Stats grid ── */
+    #results { display: none; }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+    .stat-card {
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 1px 8px rgba(0,0,0,.07);
+      padding: 18px 16px 14px;
+      text-align: center;
+    }
+    .stat-number {
+      font-size: 2rem; font-weight: 700; line-height: 1;
+      margin-bottom: 6px;
+    }
+    .stat-label { font-size: 0.75rem; color: #666; font-weight: 500; line-height: 1.3; }
+    .stat-card.total   .stat-number { color: #3949ab; }
+    .stat-card.merged  .stat-number { color: #e65100; }
+    .stat-card.sure    .stat-number { color: #2e7d32; }
+    .stat-card.inferred .stat-number { color: #6a1b9a; }
+    .stat-card.noemail .stat-number { color: #78909c; }
+
+    /* ── File breakdown ── */
+    .file-breakdown { margin-bottom: 20px; }
+    .file-breakdown summary {
+      cursor: pointer; font-size: 0.82rem; color: #3949ab;
+      font-weight: 600; user-select: none; padding: 4px 0;
+    }
+    .file-breakdown-list {
+      margin: 10px 0 0; padding: 0; list-style: none;
+      font-size: 0.82rem; color: #444;
+    }
+    .file-breakdown-list li {
+      display: flex; justify-content: space-between;
+      padding: 5px 0; border-bottom: 1px solid #f0f0f0;
+    }
+    .file-breakdown-list li:last-child { border-bottom: none; }
+    .fbl-name { font-weight: 500; }
+    .fbl-count { color: #888; }
+
+    /* ── Multi-list table ── */
+    .section-header {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
+    }
+    .section-header h2 { font-size: 1rem; font-weight: 700; margin: 0; }
+    .badge {
+      display: inline-block; background: #e65100; color: #fff;
+      border-radius: 20px; padding: 2px 10px; font-size: 0.75rem; font-weight: 700;
+    }
+
+    .table-wrap { overflow-x: auto; }
+    table { border-collapse: collapse; width: 100%; font-size: 0.82rem; }
+    th {
+      background: #f5f5f5; color: #555; font-weight: 600;
+      padding: 9px 10px; text-align: left; font-size: 0.75rem;
+      text-transform: uppercase; letter-spacing: .04em;
+      border-bottom: 2px solid #e0e0e0;
+    }
+    td { padding: 9px 10px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+
+    tr.sources-2 { background: #fff8e1; }
+    tr.sources-3 { background: #fff3e0; }
+    tr.sources-4 { background: #fbe9e7; }
+
+    /* source pill badges */
+    .pills { display: flex; flex-wrap: wrap; gap: 4px; }
+    .pill {
+      display: inline-block; border-radius: 20px;
+      padding: 2px 8px; font-size: 0.72rem; font-weight: 600;
+      white-space: nowrap;
+    }
+    .pill-intervenants { background: #e3f2fd; color: #0d47a1; }
+    .pill-pmc          { background: #e8f5e9; color: #1b5e20; }
+    .pill-google       { background: #fce4ec; color: #880e4f; }
+    .pill-other        { background: #f3e5f5; color: #4a148c; }
+
+    .email-status-tag {
+      display: inline-block; border-radius: 4px; padding: 1px 6px;
+      font-size: 0.7rem; font-weight: 600;
+    }
+    .es-identifie { background: #e8f5e9; color: #1b5e20; }
+    .es-infere    { background: #f3e5f5; color: #4a148c; }
+    .es-other     { background: #f5f5f5; color: #555; }
+    .es-none      { color: #bbb; font-style: italic; }
+
+    .sources-count-chip {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 22px; height: 22px; border-radius: 50%;
+      font-size: 0.72rem; font-weight: 700; color: #fff;
+      background: #e65100;
+    }
+    .sources-count-chip.c2 { background: #f9a825; }
+    .sources-count-chip.c3 { background: #e65100; }
+    .sources-count-chip.c4 { background: #b71c1c; }
+  </style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <div class="header">
+    <h1>CSV Merger</h1>
+    <p>Runs entirely in your browser — nothing is uploaded anywhere.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Input files</div>
+
+    <div class="drop-zone" id="drop-zone">
+      <input type="file" id="csvfiles" accept=".csv" multiple>
+      <div class="drop-icon">📂</div>
+      <div class="drop-label">Click to select CSV files</div>
+      <div class="drop-hint">Accepts: <em>Intervenants*</em>, <em>*PMC*</em>, <em>*google-results*</em></div>
+    </div>
+
+    <div class="file-list" id="file-list"></div>
+
+    <button class="btn" id="run-btn" onclick="run()">
+      <span class="spinner" id="spinner"></span>
+      Merge &amp; Download
+    </button>
+
+    <div class="status-banner" id="status"></div>
+  </div>
+
+  <!-- Results -->
+  <div id="results">
+
+    <div class="stats-grid" id="stats-grid">
+      <div class="stat-card total">
+        <div class="stat-number" id="s-total">0</div>
+        <div class="stat-label">People added to master</div>
+      </div>
+      <div class="stat-card merged">
+        <div class="stat-number" id="s-merged">0</div>
+        <div class="stat-label">Combined from multiple lists</div>
+      </div>
+      <div class="stat-card sure">
+        <div class="stat-number" id="s-sure">0</div>
+        <div class="stat-label">Sure emails</div>
+      </div>
+      <div class="stat-card inferred">
+        <div class="stat-number" id="s-inferred">0</div>
+        <div class="stat-label">Inferred emails</div>
+      </div>
+      <div class="stat-card noemail">
+        <div class="stat-number" id="s-noemail">0</div>
+        <div class="stat-label">No email</div>
+      </div>
+    </div>
+
+    <details class="card file-breakdown" id="file-breakdown">
+      <summary>Per-file breakdown</summary>
+      <ul class="file-breakdown-list" id="fbl-list"></ul>
+    </details>
+
+    <div class="card" id="multi-card" style="display:none">
+      <div class="section-header">
+        <h2>People combined from multiple lists</h2>
+        <span class="badge" id="multi-count">0</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Email status</th>
+              <th>Found in</th>
+            </tr>
+          </thead>
+          <tbody id="multi-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /results -->
+</div><!-- /page-wrap -->
+
+<script>
+const FILE_CONFIGS = [
+  {
+    pattern: /google-results/i,
+    fileKey: 'google',
+    hasEmail: false,
+    namePriority: 3,
+    getEmail: () => null,
+    getName: (row) => (row['name'] || '').trim(),
+    getJobTitle: () => '',
+    getAffiliation: (row) => (row['company/institution'] || '').trim(),
+    getEmailStatus: () => '',
+    getPaperUrl: () => '',
+  },
+  {
+    pattern: /^Intervenants/i,
+    fileKey: 'intervenants',
+    hasEmail: true,
+    namePriority: 1,
+    getEmail: (row) => (row['Email'] || '').trim().toLowerCase(),
+    getName: (row) => (row['Nom'] || '').trim(),
+    getJobTitle: () => '',
+    getAffiliation: (row) => (row['Affiliation'] || '').trim(),
+    getEmailStatus: (row) => (row['Statut_Source'] || '').trim(),
+    getPaperUrl: () => '',
+  },
+  {
+    pattern: /PMC/i,
+    fileKey: 'pmc',
+    hasEmail: true,
+    namePriority: 2,
+    getEmail: (row) => (row['Email'] || '').trim().toLowerCase(),
+    getName: (row) => (row['Author'] || '').trim(),
+    getJobTitle: () => '',
+    getAffiliation: (row) => (row['Institution'] || '').trim(),
+    getEmailStatus: () => 'Identifié',
+    getPaperUrl: (row) => (row['Paper URL'] || '').trim(),
+  },
+];
+
+function getConfig(filename) {
+  return FILE_CONFIGS.find(c => c.pattern.test(filename)) || null;
+}
+
+function normalizeName(name) {
+  return name.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, ' ').trim();
+}
+
+function isValidEmail(email) {
+  return Boolean(email) && email.toLowerCase() !== 'null' && email.includes('@');
+}
+
+function emptyRecord() {
+  return {
+    _sourceFiles: new Set(),
+    _sourceKeys: new Set(),
+    _canonicalEmail: null,
+    _canonicalName: '',
+    _namePriority: 999,
+    name: '',
+    email: '',
+    email_status: '',
+    job_title: '',
+    _affiliation: '',
+    _institution: '',
+    paper_url: '',
+  };
+}
+
+function mergeInto(record, row, config, displayName) {
+  const rawName = config.getName(row);
+  if (rawName && config.namePriority < record._namePriority) {
+    record.name = rawName;
+    record._namePriority = config.namePriority;
+  } else if (rawName && !record.name) {
+    record.name = rawName;
+    record._namePriority = config.namePriority;
+  }
+
+  const rawEmail = config.getEmail(row);
+  const canonicalEmail = isValidEmail(rawEmail) ? rawEmail : null;
+  if (canonicalEmail && !record.email) {
+    record.email = canonicalEmail;
+  }
+
+  const emailStatus = config.getEmailStatus(row);
+  if (emailStatus && !record.email_status) {
+    if (config.fileKey === 'intervenants' || canonicalEmail) {
+      record.email_status = emailStatus;
+    }
+  }
+
+  const jobTitle = config.getJobTitle(row);
+  if (jobTitle && !record.job_title) record.job_title = jobTitle;
+
+  const affil = config.getAffiliation(row);
+  if (affil) {
+    if (config.fileKey === 'intervenants' && !record._affiliation) record._affiliation = affil;
+    if ((config.fileKey === 'pmc' || config.fileKey === 'google') && !record._institution) record._institution = affil;
+  }
+
+  const paperUrl = config.getPaperUrl(row);
+  if (paperUrl && !record.paper_url) record.paper_url = paperUrl;
+
+  record._sourceFiles.add(displayName);
+  record._sourceKeys.add(config.fileKey);
+}
+
+function computeAffiliation(record) {
+  const a = record._affiliation, b = record._institution;
+  if (!a && !b) return '';
+  if (!a) return b;
+  if (!b) return a;
+  if (normalizeName(a) === normalizeName(b)) return a;
+  return a + ' / ' + b;
+}
+
+function readFile(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => resolve(e.target.result);
+    reader.onerror = () => reject(new Error(`Failed to read ${file.name}`));
+    reader.readAsText(file, 'utf-8');
+  });
+}
+
+// ── File input UI ──
+const dropZone = document.getElementById('drop-zone');
+const fileInput = document.getElementById('csvfiles');
+const fileListEl = document.getElementById('file-list');
+
+function renderFileChips(files) {
+  fileListEl.innerHTML = [...files].map(f => {
+    const matched = getConfig(f.name);
+    return `<span class="file-chip ${matched ? '' : 'unmatched'}">${matched ? '✓' : '✗'} ${f.name}</span>`;
+  }).join('');
+}
+
+fileInput.addEventListener('change', () => renderFileChips(fileInput.files));
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('drag-over');
+  fileInput.files = e.dataTransfer.files;
+  renderFileChips(fileInput.files);
+});
+
+// ── UI helpers ──
+function showStatus(msg, type) {
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  el.className = 'status-banner ' + type;
+  el.style.display = 'block';
+}
+
+function pillClass(fileKey) {
+  return { intervenants: 'pill-intervenants', pmc: 'pill-pmc', google: 'pill-google' }[fileKey] || 'pill-other';
+}
+
+function sourceFileToPillKey(name) {
+  if (/intervenants/i.test(name)) return 'intervenants';
+  if (/pmc/i.test(name)) return 'pmc';
+  if (/google/i.test(name)) return 'google';
+  return 'other';
+}
+
+function renderPills(sourceFiles) {
+  return [...sourceFiles].map(f => {
+    const key = sourceFileToPillKey(f);
+    return `<span class="pill ${pillClass(key)}">${f}</span>`;
+  }).join('');
+}
+
+function emailStatusTag(status) {
+  if (!status) return `<span class="email-status-tag es-none">—</span>`;
+  const cls = status === 'Identifié' ? 'es-identifie' : status.toLowerCase().includes('infer') || status.toLowerCase().includes('infér') ? 'es-infere' : 'es-other';
+  return `<span class="email-status-tag ${cls}">${status}</span>`;
+}
+
+// ── Main ──
+async function run() {
+  const btn = document.getElementById('run-btn');
+  btn.disabled = true;
+  btn.classList.add('loading');
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('status').style.display = 'none';
+
+  try {
+    const fileInputs = [...fileInput.files];
+    if (fileInputs.length === 0) throw new Error('Please select at least one file.');
+
+    const files = [];
+    const warnings = [];
+    const fileCounts = [];
+
+    for (const file of fileInputs) {
+      const config = getConfig(file.name);
+      if (!config) {
+        warnings.push(`No config matched for "${file.name}" — skipped.`);
+        continue;
+      }
+      files.push({ name: file.name, config, file });
+    }
+
+    if (files.length === 0) throw new Error('No recognised files selected.');
+
+    // Email-having files first
+    files.sort((a, b) => (b.config.hasEmail ? 1 : 0) - (a.config.hasEmail ? 1 : 0));
+
+    const mergeIndex = new Map();
+    const nameToKey = new Map();
+
+    for (const { name, config, file } of files) {
+      const content = await readFile(file);
+      const { data } = Papa.parse(content, { header: true, skipEmptyLines: true, trimHeaders: true, transform: v => v.trim() });
+
+      fileCounts.push({ name: name.replace(/\.csv$/i, ''), count: data.length });
+
+      for (const row of data) {
+        const rawEmail = config.getEmail(row);
+        const canonicalEmail = isValidEmail(rawEmail) ? rawEmail : null;
+        const rawName = config.getName(row);
+        const canonicalName = normalizeName(rawName);
+
+        let key;
+        if (canonicalEmail) key = canonicalEmail;
+        else if (nameToKey.has(canonicalName)) key = nameToKey.get(canonicalName);
+        else key = canonicalName;
+
+        if (!mergeIndex.has(key)) {
+          const record = emptyRecord();
+          record._canonicalEmail = canonicalEmail;
+          record._canonicalName = canonicalName;
+          mergeIndex.set(key, record);
+        }
+
+        mergeInto(mergeIndex.get(key), row, config, name.replace(/\.csv$/i, ''));
+        if (!nameToKey.has(canonicalName)) nameToKey.set(canonicalName, key);
+      }
+    }
+
+    // ── Compute stats from raw records (before flattening) ──
+    let statSure = 0, statInferred = 0, statNoEmail = 0, statMerged = 0;
+    for (const record of mergeIndex.values()) {
+      if (record._sourceFiles.size > 1) statMerged++;
+      const hasEmail = isValidEmail(record.email);
+      if (!hasEmail) {
+        statNoEmail++;
+      } else if (record.email_status === 'Identifié') {
+        statSure++;
+      } else {
+        statInferred++;
+      }
+    }
+
+    // ── Build output rows ──
+    const OUTPUT_COLUMNS = ['name', 'email', 'email_status', 'job_title', 'affiliation', 'paper_url', 'source_files'];
+    const allRecords = [...mergeIndex.values()];
+    const rows = allRecords.map(record => ({
+      name: record.name,
+      email: record.email,
+      email_status: record.email_status,
+      job_title: record.job_title,
+      affiliation: computeAffiliation(record),
+      paper_url: record.paper_url,
+      source_files: [...record._sourceFiles].join(', '),
+      _sourceFiles: record._sourceFiles,
+    }));
+
+    // ── Download ──
+    const csvData = rows.map(r => ({ ...r, _sourceFiles: undefined }));
+    const csv = '﻿' + Papa.unparse(csvData.map(({ _sourceFiles, ...r }) => r), { columns: OUTPUT_COLUMNS });
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'master.csv'; a.click();
+    URL.revokeObjectURL(url);
+
+    // ── Stats UI ──
+    document.getElementById('s-total').textContent = rows.length;
+    document.getElementById('s-merged').textContent = statMerged;
+    document.getElementById('s-sure').textContent = statSure;
+    document.getElementById('s-inferred').textContent = statInferred;
+    document.getElementById('s-noemail').textContent = statNoEmail;
+
+    // ── File breakdown ──
+    const fbl = document.getElementById('fbl-list');
+    fbl.innerHTML = fileCounts.map(f =>
+      `<li><span class="fbl-name">${f.name}</span><span class="fbl-count">${f.count} rows</span></li>`
+    ).join('');
+
+    // ── Multi-list table ──
+    const duplicates = rows
+      .filter(r => r._sourceFiles.size > 1)
+      .sort((a, b) => b._sourceFiles.size - a._sourceFiles.size);
+
+    const multiCard = document.getElementById('multi-card');
+    const tbody = document.getElementById('multi-tbody');
+    tbody.innerHTML = '';
+
+    if (duplicates.length > 0) {
+      document.getElementById('multi-count').textContent = duplicates.length;
+      duplicates.forEach((r, i) => {
+        const n = r._sourceFiles.size;
+        const rowClass = n >= 4 ? 'sources-4' : n === 3 ? 'sources-3' : 'sources-2';
+        const chipClass = n >= 4 ? 'c4' : n === 3 ? 'c3' : 'c2';
+        const tr = document.createElement('tr');
+        tr.className = rowClass;
+        tr.innerHTML = `
+          <td><span class="sources-count-chip ${chipClass}">${n}</span></td>
+          <td>${r.name || '—'}</td>
+          <td style="font-size:.78rem;color:#444">${r.email || '<em style="color:#bbb">none</em>'}</td>
+          <td>${emailStatusTag(r.email_status)}</td>
+          <td><div class="pills">${renderPills(r._sourceFiles)}</div></td>
+        `;
+        tbody.appendChild(tr);
+      });
+      multiCard.style.display = '';
+    } else {
+      multiCard.style.display = 'none';
+    }
+
+    document.getElementById('results').style.display = 'block';
+
+    const msg = `Done — ${rows.length} records written to master.csv.` +
+      (warnings.length ? '\n\nWarnings:\n' + warnings.join('\n') : '');
+    showStatus(msg, warnings.length ? 'warn' : 'ok');
+
+  } catch (err) {
+    showStatus('Error: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.classList.remove('loading');
+  }
+}
+</script>
+</body>
+</html>

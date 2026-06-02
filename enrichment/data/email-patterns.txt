@@ -1,0 +1,11 @@
+# Email pattern templates — one per line
+# Tokens: {first} {last} {firstinitial} {lastinitial} {domain}
+# Lines starting with # are ignored
+
+{first}.{last}@{domain}
+{firstinitial}{last}@{domain}
+{first}_{last}@{domain}
+{last}@{domain}
+{firstinitial}.{last}@{domain}
+{first}{last}@{domain}
+{last}.{first}@{domain}

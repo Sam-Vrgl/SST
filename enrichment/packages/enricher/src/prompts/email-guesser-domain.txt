@@ -1,0 +1,3 @@
+What is the email domain used by this institution: "{{AFFILIATION}}"?
+Return ONLY the domain (e.g. harvard.edu or inserm.fr), nothing else.
+If you cannot determine the domain, return exactly: NONE
