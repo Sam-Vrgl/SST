@@ -1,0 +1,13 @@
+{
+  "name": "enrichment",
+  "private": true,
+  "workspaces": ["packages/*", "apps/*"],
+  "scripts": {
+    "dev": "bun --env-file=.env apps/web/src/server.ts",
+    "start": "bun --env-file=.env apps/web/src/server.ts"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "bun-types": "latest"
+  }
+}

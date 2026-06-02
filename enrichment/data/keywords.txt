@@ -1,0 +1,58 @@
+# Keyword list — one keyword or phrase per line
+# Lines starting with # are ignored
+
+breast cancer
+adipose tissue
+tumor microenvironment
+immunotherapy
+checkpoint inhibitor
+PD-1
+PD-L1
+CTLA-4
+CAR-T
+NK cell
+T-cell
+regulatory T cell
+Treg
+myeloid
+macrophage
+dendritic cell
+neutrophil
+stroma
+fibroblast
+angiogenesis
+metastasis
+biomarker
+clinical trial
+TNBC
+triple negative breast cancer
+HER2
+ER+
+hormone receptor positive
+luminal
+basal-like
+oncology
+precision medicine
+liquid biopsy
+ctDNA
+immunosuppression
+cytokine
+interleukin
+interferon
+chemotherapy
+radiotherapy
+targeted therapy
+BRCA
+PI3K
+PTEN
+mTOR
+VEGF
+anti-tumor immunity
+tumor infiltrating lymphocyte
+TIL
+spatial transcriptomics
+single-cell RNA
+scRNA-seq
+proteomics
+genomics
+epigenetics

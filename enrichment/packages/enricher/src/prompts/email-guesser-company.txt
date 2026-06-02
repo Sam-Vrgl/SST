@@ -1,0 +1,9 @@
+Generate the institutional email address for the researcher named "{{NAME}}" at {{COMPANY}}.
+
+Known email format for {{COMPANY}}:
+  Pattern : {{PATTERN}}
+  Example : {{EXAMPLE}}
+{{RULES_LINE}}
+Apply the pattern and rules carefully to generate the correct email.
+Return ONLY the email address on a single line.
+If you cannot generate a confident email, return exactly: NONE
