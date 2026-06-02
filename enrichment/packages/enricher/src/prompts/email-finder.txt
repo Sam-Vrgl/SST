@@ -1,5 +1,0 @@
-Find the institutional email address of the researcher named "{{NAME}}".
-{{CONTEXT}}
-Search the web to find a publicly listed institutional email address.
-Return ONLY the email address on a single line.
-If you cannot find a confirmed email address, return exactly: NONE

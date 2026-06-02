@@ -1,5 +1,0 @@
-First Name,Author,Email,Institution,Title,Year,Keywords,Author Type,Decision Maker,Paper URL
-Alice,Alice Martin,alice.martin@curie.fr,Breast Cancer Research Center,Tumor microenvironment in triple-negative breast cancer,2025,TME breast cancer,Corresponding Author,Yes,https://pubmed.ncbi.nlm.nih.gov/99000001/
-Bob,Bob Dupont,bob.dupont@inserm.fr,INSERM U900,Immune evasion mechanisms in HR+ breast tumors,2025,immune evasion,Corresponding Author,No,https://pubmed.ncbi.nlm.nih.gov/99000002/
-Carol,Carol Leroy,carol.leroy@unicancer.fr,Centre Léon Bérard,PD-L1 expression patterns across breast cancer subtypes,2025,PD-L1 immunotherapy,Corresponding Author,No,https://pubmed.ncbi.nlm.nih.gov/99000003/
-Henri,Henri Blanc,henri.blanc@igr.fr,Institut Gustave Roussy,BRCA1/2 mutations and TME remodeling in hereditary breast cancer,2025,BRCA hereditary,Corresponding Author,No,https://pubmed.ncbi.nlm.nih.gov/99000004/
