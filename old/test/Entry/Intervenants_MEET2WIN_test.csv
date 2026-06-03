@@ -1,9 +1,0 @@
-Nom,Affiliation,Email,Statut_Source
-Alice Martin,"Institut Curie, Paris",alice.martin@curie.fr,Identifié
-Bob Dupont,INSERM U900,bob.dupont@inserm.fr,Identifié
-Carol Leroy,Unicancer,carol.leroy@unicancer.fr,Suggéré (Format standard)
-David Prince,Gustave Roussy,david.prince@gustaveroussy.fr,Identifié
-Eve Simon,Pfizer Oncology,eve.simon@pfizer.com,Identifié
-Frank Morel,Roche France,frank.morel@roche.com,Suggéré (Format standard)
-Grace Laurent,,NULL,Non trouvé
-Léa Dupré,"IGF, Montpellier",lea.dupre@igf.cnrs.fr,Identifié
