@@ -77,9 +77,8 @@ async function handleEnrich(req: Request): Promise<Response> {
   }
 
   const patternsFile = formData.get('patterns') as File | null;
-  const patternsTxtContent = patternsFile
-    ? await patternsFile.text()
-    : await readDataFile('email-patterns.txt');
+  const patternsTxtContent = await readDataFile('email-patterns.txt');
+  const companyCsvContent = patternsFile ? await patternsFile.text() : undefined;
 
   const job: Job = { events: [], listeners: new Set(), done: false, result: null };
   currentJob = job;
@@ -88,6 +87,7 @@ async function handleEnrich(req: Request): Promise<Response> {
   runEnrichment({
     masterRecords: lastMergedRecords,
     patternsTxtContent,
+    companyCsvContent,
     onProgress(event) {
       job.events.push(event);
       job.listeners.forEach(fn => fn(event));

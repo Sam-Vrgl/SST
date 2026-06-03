@@ -11,12 +11,13 @@ const EMAIL_RE = /[\w.+\-]+@[\w.\-]+\.[a-z]{2,}/i;
 export async function guessEmail(
   client: GeminiClient,
   record: MasterRecord,
-  patterns: EmailPattern[]
+  patterns: EmailPattern[],
+  extraCompanyPatterns: CompanyPattern[] = []
 ): Promise<string | null> {
   if (!record.affiliation.trim()) return null;
 
   // Try known company patterns first
-  const company = matchCompany(record.affiliation);
+  const company = matchCompany(record.affiliation, extraCompanyPatterns);
   if (company) {
     return guessFromCompanyPattern(client, record, company);
   }

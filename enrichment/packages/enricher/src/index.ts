@@ -1,6 +1,7 @@
 import { parseMasterCsv } from './csv-reader';
 import { serializeEnrichedCsv } from './csv-writer';
 import { parsePatterns } from './pattern-parser';
+import { parseCompanyPatternsCsv } from './company-patterns';
 import { GeminiClient } from './gemini-client';
 import { findEmailOnline } from './email-finder';
 import { guessEmail, wildGuessEmail } from './email-guesser';
@@ -19,10 +20,11 @@ export { serializeEnrichedCsv, serializeMasterCsv } from './csv-writer';
 export { mergeFiles } from './csv-merger';
 
 export async function runEnrichment(config: EnrichmentConfig): Promise<EnrichedRecord[]> {
-  const { patternsTxtContent, onProgress } = config;
+  const { patternsTxtContent, companyCsvContent, onProgress } = config;
 
   const records = config.masterRecords ?? parseMasterCsv(config.masterCsvContent ?? '');
   const patterns = parsePatterns(patternsTxtContent);
+  const extraCompanyPatterns = companyCsvContent ? parseCompanyPatternsCsv(companyCsvContent) : [];
 
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new Error('GEMINI_API_KEY environment variable is not set');
@@ -67,7 +69,7 @@ export async function runEnrichment(config: EnrichmentConfig): Promise<EnrichedR
           stats.enriched++;
           return;
         }
-        const guessed = await guessEmail(client, record, patterns);
+        const guessed = await guessEmail(client, record, patterns, extraCompanyPatterns);
         if (guessed) {
           enriched_email = guessed;
           email_enrichment_method = 'pattern';

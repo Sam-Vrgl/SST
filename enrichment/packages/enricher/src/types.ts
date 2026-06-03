@@ -67,5 +67,6 @@ export interface EnrichmentConfig {
   masterCsvContent?: string;
   masterRecords?: MasterRecord[];
   patternsTxtContent: string;
+  companyCsvContent?: string;
   onProgress: (event: ProgressEvent) => void;
 }

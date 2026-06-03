@@ -35,8 +35,25 @@ export function loadCompanyPatterns(): CompanyPattern[] {
   return _patterns;
 }
 
-export function matchCompany(affiliation: string): CompanyPattern | null {
-  const patterns = loadCompanyPatterns();
+export function parseCompanyPatternsCsv(csvContent: string): CompanyPattern[] {
+  const rows = parse(csvContent, {
+    columns: true,
+    skip_empty_lines: true,
+    trim: true,
+  }) as Record<string, string>[];
+
+  return rows
+    .map(r => ({
+      company: r['Company Name'] ?? '',
+      emailStructure: r['Email structure'] ?? '',
+      example: r['example'] ?? '',
+      rules: r['Rules'] ?? '',
+    }))
+    .filter(p => p.company && p.emailStructure);
+}
+
+export function matchCompany(affiliation: string, extraPatterns: CompanyPattern[] = []): CompanyPattern | null {
+  const patterns = [...loadCompanyPatterns(), ...extraPatterns];
   const needle = affiliation.toLowerCase();
 
   for (const p of patterns) {
